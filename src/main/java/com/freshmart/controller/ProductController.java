@@ -1,11 +1,11 @@
 package com.freshmart.controller;
 
 import com.freshmart.model.Product;
+import com.freshmart.repository.ProductRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,26 +13,21 @@ import java.util.Optional;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final List<Product> products = new ArrayList<>();
+    private final ProductRepository productRepository;
 
-    // Initialize with some sample data (optional)
-    public ProductController() {
-        // Sample product can be added here if desired
+    public ProductController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
     @GetMapping
     public List<Product> getAllProducts() {
-        return products;
+        return productRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> product = products.stream()
-                .filter(p -> p.getId() != null && p.getId().equals(id))
-                .findFirst();
+        Optional<Product> product = productRepository.findById(id);
         return product.map(ResponseEntity::ok)
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
-
-    // Additional endpoints could be added later (POST, etc.)
 }
