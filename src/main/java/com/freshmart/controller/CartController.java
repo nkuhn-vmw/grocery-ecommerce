@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequestMapping("/api/cart")
 public class CartController {
 
-    private final Map<String, List<CartItem>> carts = new ConcurrentHashMap<>();
+    public static final Map<String, List<CartItem>> carts = new ConcurrentHashMap<>();
     private final AtomicLong cartCounter = new AtomicLong(0);
 
     @PostMapping("/")
