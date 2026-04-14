@@ -70,7 +70,20 @@
         <div id="cartTotal" class="cart-total">
             Total: $0.00
         </div>
-        <button class="checkout-btn">Checkout</button>
+        <button class="checkout-btn" onclick="showCheckoutForm()">Checkout</button>
+    <div id="checkoutForm" style="display:none; margin-top:1rem;">
+        <h3>Checkout</h3>
+        <input type="text" id="custName" placeholder="Name" style="width:100%;margin-bottom:0.5rem;" />
+        <input type="email" id="custEmail" placeholder="Email" style="width:100%;margin-bottom:0.5rem;" />
+        <textarea id="custAddress" placeholder="Address" style="width:100%;margin-bottom:0.5rem;"></textarea>
+        <button onclick="submitCheckout()" style="background:#2d8a4e;color:white;border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;">Submit Order</button>
+        <button onclick="hideCheckoutForm()" style="background:#aaa;color:white;border:none;padding:0.5rem 1rem;border-radius:4px;margin-left:0.5rem;cursor:pointer;">Cancel</button>
+    </div>
+    <div id="orderConfirmation" style="display:none; margin-top:1rem;">
+        <h3>Order Confirmed</h3>
+        <p id="orderInfo"></p>
+        <button onclick="closeConfirmation()" style="background:#2d8a4e;color:white;border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;">Close</button>
+    </div>
     </div>
     
     <footer>Powered by jclaw</footer>
@@ -200,6 +213,54 @@
                 console.error('Error adding to cart:', err);
             });
         }
+    function showCheckoutForm() {
+        document.getElementById('checkoutForm').style.display = 'block';
+    }
+    function hideCheckoutForm() {
+        document.getElementById('checkoutForm').style.display = 'none';
+    }
+    function closeConfirmation() {
+        document.getElementById('orderConfirmation').style.display = 'none';
+    }
+    function submitCheckout() {
+        const name = document.getElementById('custName').value;
+        const email = document.getElementById('custEmail').value;
+        const address = document.getElementById('custAddress').value;
+        if (!cartId) {
+            alert('Cart is empty');
+            return;
+        }
+        const payload = {
+            cartId: cartId,
+            customerName: name,
+            customerEmail: email,
+            customerAddress: address
+        };
+        fetch('/api/orders/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Checkout failed');
+            return res.json();
+        })
+        .then(order => {
+            document.getElementById('orderInfo').textContent = `Order ID: ${order.id}, Total: $${order.total}`;
+            document.getElementById('orderConfirmation').style.display = 'block';
+            // clear cart UI and local storage
+            cartId = null;
+            localStorage.removeItem('cartId');
+            updateCartCount(0);
+            document.getElementById('cartItems').innerHTML = '';
+            document.getElementById('cartTotal').textContent = 'Total: $0.00';
+            hideCheckoutForm();
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Checkout error');
+        });
+    }
     </script>
 </body>
 </html>

@@ -16,10 +16,15 @@ public class CartController {
     private final AtomicLong cartCounter = new AtomicLong(0);
 
     @PostMapping("/")
-    public String createCart() {
+    public java.util.Map<String, String> createCart() {
         String cartId = UUID.randomUUID().toString();
         carts.put(cartId, new ArrayList<>());
-        return cartId;
+        return java.util.Collections.singletonMap("cartId", cartId);
+    }
+
+    // Clear cart contents (used after checkout)
+    public void clearCart(String cartId) {
+        carts.remove(cartId);
     }
 
     @GetMapping("/{cartId}")
