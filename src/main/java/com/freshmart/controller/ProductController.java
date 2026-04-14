@@ -1,6 +1,7 @@
 package com.freshmart.controller;
 
 import com.freshmart.model.Product;
+import com.freshmart.model.Category;
 import com.freshmart.repository.ProductRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,11 @@ public class ProductController {
     @GetMapping
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    @GetMapping("/category/{category}")
+    public List<Product> getProductsByCategory(@PathVariable Category category) {
+        return productRepository.findByCategory(category);
     }
 
     @GetMapping("/{id}")
