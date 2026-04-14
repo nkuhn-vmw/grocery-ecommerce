@@ -175,7 +175,8 @@
                 card.innerHTML =
                     `<div class="product-name">${badge}${product.name}</div>` +
                     `<div class="product-price">$${Number(product.price).toFixed(2)}</div>` +
-                    `<button class="add-to-cart" onclick='addToCart(${JSON.stringify(product).replace(/"/g, '\\"')} )'>Add to Cart</button>`;
+                    `<div class="product-stock">In Stock: ${product.stockQuantity}</div>` +
+                    `<button class="add-to-cart" ${product.stockQuantity <= 0 ? 'disabled' : ''} onclick='addToCart(${JSON.stringify(product).replace(/"/g, '\\"')} )'>Add to Cart</button>`;
                 grid.appendChild(card);
             });
         })
@@ -268,8 +269,12 @@ document.addEventListener('DOMContentLoaded', loadProducts);
             if (!res.ok) throw new Error('Checkout failed');
             return res.json();
         })
-        .then(order => {
-            document.getElementById('orderInfo').textContent = `Order ID: ${order.id}, Total: $${order.total}`;
+        .then(resp => {
+            // resp contains order and items
+            const order = resp.order;
+            const items = resp.items || [];
+            let itemsHtml = items.map(i => `<li>${i.productName} x${i.quantity} - $${(i.price * i.quantity).toFixed(2)}</li>`).join('');
+            document.getElementById('orderInfo').innerHTML = `Order ID: ${order.id}, Total: $${order.total}<br><ul>${itemsHtml}</ul>`;
             document.getElementById('orderConfirmation').style.display = 'block';
             // clear cart UI and local storage
             cartId = null;
@@ -278,6 +283,8 @@ document.addEventListener('DOMContentLoaded', loadProducts);
             document.getElementById('cartItems').innerHTML = '';
             document.getElementById('cartTotal').textContent = 'Total: $0.00';
             hideCheckoutForm();
+            // reload products to reflect updated stock
+            loadProducts();
         })
         .catch(err => {
             console.error(err);
