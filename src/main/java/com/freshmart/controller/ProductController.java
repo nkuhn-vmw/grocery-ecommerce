@@ -20,7 +20,7 @@ public class ProductController {
         // Sample product can be added here if desired
     }
 
-    @GetMapping("/")
+    @GetMapping
     public List<Product> getAllProducts() {
         return products;
     }
