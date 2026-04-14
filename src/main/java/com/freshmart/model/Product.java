@@ -5,19 +5,27 @@ import java.math.BigDecimal;
 
 @Entity
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
+
+    @Column(length = 1000)
     private String description;
+
     private BigDecimal price;
+
     @Enumerated(EnumType.STRING)
     private Category category;
+
     private String imageUrl;
+
     private int stockQuantity;
 
-    // Constructors
     public Product() {}
+
     public Product(Long id, String name, String description, BigDecimal price, Category category, String imageUrl, int stockQuantity) {
         this.id = id;
         this.name = name;
