@@ -32,8 +32,11 @@ public class OrderController {
         public String customerAddress;
     }
 
+    @Autowired
+    private com.freshmart.repository.ProductRepository productRepository;
+
     @PostMapping("/checkout")
-    public ResponseEntity<Order> checkout(@RequestBody CheckoutRequest req) {
+    public ResponseEntity<CheckoutResponse> checkout(@RequestBody CheckoutRequest req) {
         // Retrieve cart items
         List<CartItem> items = cartController.getCart(req.cartId);
         if (items == null) {
@@ -48,22 +51,44 @@ public class OrderController {
         long orderId = orderIdSeq.getAndIncrement();
         order.setId(orderId);
         orders.put(orderId, order);
-        // Create order items
+        // Create order items and decrement stock
         List<OrderItem> oItems = items.stream()
-                .map(i -> new OrderItem(orderId, i.getProductName(), i.getQuantity(), i.getPrice()))
+                .map(i -> {
+                    // decrement product stock
+                    productRepository.findById(i.getProductId()).ifPresent(p -> {
+                        int newStock = p.getStockQuantity() - i.getQuantity();
+                        p.setStockQuantity(Math.max(newStock, 0));
+                        productRepository.save(p);
+                    });
+                    return new OrderItem(orderId, i.getProductName(), i.getQuantity(), i.getPrice());
+                })
                 .toList();
         orderItems.put(orderId, oItems);
         // Clear cart
         cartController.clearCart(req.cartId);
-        return ResponseEntity.status(201).body(order);
+        CheckoutResponse resp = new CheckoutResponse(order, oItems);
+        return ResponseEntity.status(201).body(resp);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+    public ResponseEntity<CheckoutResponse> getOrder(@PathVariable Long id) {
         Order order = orders.get(id);
         if (order == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(order);
+        List<OrderItem> items = orderItems.getOrDefault(id, List.of());
+        CheckoutResponse resp = new CheckoutResponse(order, items);
+        return ResponseEntity.ok(resp);
     }
+
+    public static class CheckoutResponse {
+        public Order order;
+        public List<OrderItem> items;
+        public CheckoutResponse(Order order, List<OrderItem> items) {
+            this.order = order;
+            this.items = items;
+        }
+    }
+
+    
 }
